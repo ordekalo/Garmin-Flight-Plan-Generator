@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<flight-plan xmlns="http://www8.garmin.com/xmlschemas/FlightPlan/v1">
+	<created>2021-01-05T21:13:16Z</created>
+	<waypoint-table>
+		<waypoint>
+			<identifier>ADAMI</identifier>
+			<type>USER WAYPOINT</type>
+			<country-code></country-code>
+			<lat>33.078847</lat>
+			<lon>35.209509</lon>
+			<comment></comment>
+		</waypoint>
+		<waypoint>
+			<identifier>AFB06</identifier>
+			<type>USER WAYPOINT</type>
+			<country-code></country-code>
+			<lat>31.229373</lat>
+			<lon>34.660437</lon>
+			<comment></comment>
+		</waypoint>
+	</waypoint-table>
+	<route>
+		<route-name>test2</route-name>
+		<route-description>second test</route-description>
+		<flight-plan-index>2</flight-plan-index>
+		<route-point>
+			<waypoint-identifier>ADAMI</waypoint-identifier>
+			<waypoint-type>USER WAYPOINT</waypoint-type>
+			<waypoint-country-code></waypoint-country-code>
+		</route-point>
+		<route-point>
+			<waypoint-identifier>AFB06</waypoint-identifier>
+			<waypoint-type>USER WAYPOINT</waypoint-type>
+			<waypoint-country-code></waypoint-country-code>
+		</route-point>
+	</route>
+</flight-plan>

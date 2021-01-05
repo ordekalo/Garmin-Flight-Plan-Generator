@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<flight-plan xmlns="http://www8.garmin.com/xmlschemas/FlightPlan/v1">
+    <created>2021-01-05T20:54:34Z</created>
+    <waypoint-table>
+        <waypoint>
+            <identifier>6100</identifier>
+            <type>USER WAYPOINT</type>
+            <country-code></country-code>
+            <lat>32.479942</lat>
+            <lon>35.456729</lon>
+            <comment></comment>
+        </waypoint>
+        <waypoint>
+            <identifier>6101</identifier>
+            <type>USER WAYPOINT</type>
+            <country-code></country-code>
+            <lat>32.180978</lat>
+            <lon>34.828975</lon>
+            <comment></comment>
+        </waypoint>
+        <waypoint>
+            <identifier>08M07</identifier>
+            <type>USER WAYPOINT</type>
+            <country-code></country-code>
+            <lat>32.632667</lat>
+            <lon>35.207167</lon>
+            <comment></comment>
+        </waypoint>
+        <waypoint>
+            <identifier>11M08</identifier>
+            <type>USER WAYPOINT</type>
+            <country-code></country-code>
+            <lat>31.772166</lat>
+            <lon>34.8145</lon>
+            <comment></comment>
+        </waypoint>
+        <waypoint>
+            <identifier>16M12</identifier>
+            <type>USER WAYPOINT</type>
+            <country-code></country-code>
+            <lat>32.597667</lat>
+            <lon>35.238</lon>
+            <comment></comment>
+        </waypoint>
+        <waypoint>
+            <identifier>20M19</identifier>
+            <type>USER WAYPOINT</type>
+            <country-code></country-code>
+            <lat>31.806667</lat>
+            <lon>34.9435</lon>
+            <comment></comment>
+        </waypoint>
+    </waypoint-table>
+    <route>
+        <route-name>TESTFPL</route-name>
+        <route-description>TEST</route-description>
+        <flight-plan-index>1</flight-plan-index>
+        <route-point>
+            <waypoint-identifier>6100</waypoint-identifier>
+            <waypoint-type>USER WAYPOINT</waypoint-type>
+            <waypoint-country-code></waypoint-country-code>
+        </route-point>
+        <route-point>
+            <waypoint-identifier>6101</waypoint-identifier>
+            <waypoint-type>USER WAYPOINT</waypoint-type>
+            <waypoint-country-code></waypoint-country-code>
+        </route-point>
+        <route-point>
+            <waypoint-identifier>08M07</waypoint-identifier>
+            <waypoint-type>USER WAYPOINT</waypoint-type>
+            <waypoint-country-code></waypoint-country-code>
+        </route-point>
+        <route-point>
+            <waypoint-identifier>11M08</waypoint-identifier>
+            <waypoint-type>USER WAYPOINT</waypoint-type>
+            <waypoint-country-code></waypoint-country-code>
+        </route-point>
+        <route-point>
+            <waypoint-identifier>16M12</waypoint-identifier>
+            <waypoint-type>USER WAYPOINT</waypoint-type>
+            <waypoint-country-code></waypoint-country-code>
+        </route-point>
+        <route-point>
+            <waypoint-identifier>20M19</waypoint-identifier>
+            <waypoint-type>USER WAYPOINT</waypoint-type>
+            <waypoint-country-code></waypoint-country-code>
+        </route-point>
+    </route>
+</flight-plan>
