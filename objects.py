@@ -25,8 +25,8 @@ class Waypoint:
     def __init__(self, name: str, identifier: str, lat: float, lon: float,
                  waypoint_type: WaypointType = WaypointType.USER_WAYPOINT,
                  country_code: str = ""):
-        self.name = name
-        self.identifier = identifier
+        self.name = name.upper()
+        self.identifier = identifier.upper()
         self.type = waypoint_type
         self.country_code = "" if country_code in ("NULL", "") else "IL"
         self.lat = lat
@@ -55,7 +55,7 @@ class Route:
 
     def __init__(self, route_name: str, flight_plan_index: int = 1, route_description: str = ""):
         self.flight_plan_index = flight_plan_index
-        self.route_name = route_name
+        self.route_name = route_name.upper()
         self.route_description = route_description
         self.created = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
         self.route_points = []
