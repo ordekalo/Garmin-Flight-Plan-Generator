@@ -10,22 +10,24 @@ all_waypoints = []
 
 for row in waypoint_table:
     # parsing
-    identifier = row[0].value
-    waypoint_type = row[1].value
-    country_code = row[2].value
-    lat = row[3].value
-    lon = row[4].value
-    comment = row[5].value
+    name = row[0].value
+    identifier = row[1].value
+    waypoint_type = row[2].value
+    country_code = row[3].value
+    lat = row[4].value
+    lon = row[5].value
+    comment = row[6].value
 
     # creating object
-    waypoint: Waypoint = Waypoint(identifier=identifier, waypoint_type=waypoint_type, country_code=country_code,
+    waypoint: Waypoint = Waypoint(name=name, identifier=identifier, waypoint_type=waypoint_type,
+                                  country_code=country_code,
                                   lat=lat, lon=lon)
 
     # adding to list
     if identifier != "identifier":
         all_waypoints.append(waypoint)
 
-wb2 = load_workbook('flight_plans.xlsx')
+wb2 = load_workbook('input/flight_plans.xlsx')
 info_table = wb2['info']
 route_points_table = wb2['routes']
 

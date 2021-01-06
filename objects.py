@@ -13,6 +13,7 @@ class WaypointType(Enum):
 
 @dataclass
 class Waypoint:
+    name: str
     identifier: str
     type: WaypointType
     country_code: str
@@ -21,12 +22,13 @@ class Waypoint:
     comment: str
     elevation: float
 
-    def __init__(self, identifier: str, lat: float, lon: float,
+    def __init__(self, name: str, identifier: str, lat: float, lon: float,
                  waypoint_type: WaypointType = WaypointType.USER_WAYPOINT,
-                 country_code: str = "IL"):
+                 country_code: str = ""):
+        self.name = name
         self.identifier = identifier
         self.type = waypoint_type
-        self.country_code = "" if country_code == "NULL" else "IL"
+        self.country_code = "" if country_code in ("NULL", "") else "IL"
         self.lat = lat
         self.lon = lon
         self.comment = ""

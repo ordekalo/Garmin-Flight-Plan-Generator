@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <flight-plan xmlns="http://www8.garmin.com/xmlschemas/FlightPlan/v1">
-	<created>2021-01-05T21:13:16Z</created>
+	<created>2021-01-06T18:58:34Z</created>
 	<waypoint-table>
 		<waypoint>
 			<identifier>AFFEK</identifier>
