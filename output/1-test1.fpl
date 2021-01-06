@@ -28,7 +28,7 @@
 		</waypoint>
 	</waypoint-table>
 	<route>
-		<route-name>test1</route-name>
+		<route-name>TEST1</route-name>
 		<route-description>first test</route-description>
 		<flight-plan-index>1</flight-plan-index>
 		<route-point>
