@@ -3,190 +3,127 @@ from xml.dom import minidom
 from functions import get_waypoint, get_route, get_route_point_order
 from objects import *
 
-wb = load_workbook('static/waypoints.xlsx')
-waypoint_table = wb['waypoint-table']
+# Load waypoint data from Excel
+def load_waypoints(file_path):
+    wb = load_workbook(file_path)
+    waypoint_table = wb['waypoint-table']
+    waypoints = []
 
-all_waypoints = []
-
-for row in waypoint_table:
-    # parsing
-    name = row[0].value
-    identifier = row[1].value
-    waypoint_type = row[2].value
-    country_code = row[3].value
-    lat = row[4].value
-    lon = row[5].value
-    comment = row[6].value
-
-    # creating object
-    waypoint: Waypoint = Waypoint(name=name, identifier=identifier, waypoint_type=waypoint_type,
-                                  country_code=country_code,
-                                  lat=lat, lon=lon)
-
-    # adding to list
-    if identifier != "identifier":
-        all_waypoints.append(waypoint)
-
-wb2 = load_workbook('input/flight_plans.xlsx')
-info_table = wb2['info']
-route_points_table = wb2['routes']
-
-all_routes = []
-
-for row in info_table:
-    # parsing
-    flight_plan_index = row[0].value
-    route_name = row[1].value
-    route_description = row[2].value
-
-    # creating object
-    route: Route = Route(route_name=route_name, flight_plan_index=flight_plan_index,
-                         route_description=route_description)
-
-    # adding to list
-    if flight_plan_index != "flight-plan-index":
-        all_routes.append(route)
-
-for row in route_points_table:
-    # parsing
-    flight_plan_index = row[0].value
-    identifier = row[1].value
-    order = row[2].value
-
-    if identifier == "identifier":
-        continue
-
-    # fetching waypoint by identifier
-    waypoint = get_waypoint(identifier=identifier, all_waypoint=all_waypoints)
-    if not waypoint:
-        print(f"waypoint {identifier} doesn\'t exist!")
-        quit()
-
-    # fetching route by flight_plan_index
-    route = get_route(flight_plan_index=flight_plan_index, all_routes=all_routes)
-    if not route:
-        print(f"route {flight_plan_index} doesn\'t exist!")
-        quit()
-
-    # creating object
-    route_point: RoutePoint = RoutePoint(waypoint=waypoint, order=order)
-
-    route.route_points.append(route_point)
-
-# sort route points by order
-for route in all_routes:
-    route.route_points.sort(key=get_route_point_order)
-
-# # print test
-# for route in all_routes:
-#     print(route.__dict__)
-#     for route_point in route.route_points:
-#         print(route_point.__dict__)
+    for row in waypoint_table.iter_rows(min_row=2):  # Skip header
+        name, identifier, waypoint_type, country_code, lat, lon, comment = [cell.value for cell in row]
+        if identifier != "identifier":  # Avoid header repetition
+            waypoints.append(Waypoint(name=name, identifier=identifier, waypoint_type=waypoint_type,
+                                      country_code=country_code, lat=lat, lon=lon))
+    return waypoints
 
 
-for fpl in all_routes:
-    root = minidom.Document()
+# Load route data from Excel
+def load_routes(file_path):
+    wb2 = load_workbook(file_path)
+    info_table = wb2['info']
+    route_points_table = wb2['routes']
+    
+    routes = []
+    for row in info_table.iter_rows(min_row=2):  # Skip header
+        flight_plan_index, route_name, route_description = [cell.value for cell in row]
+        if flight_plan_index != "flight-plan-index":
+            routes.append(Route(route_name=route_name, flight_plan_index=flight_plan_index,
+                                route_description=route_description))
+    
+    # Map route points to routes
+    for row in route_points_table.iter_rows(min_row=2):  # Skip header
+        flight_plan_index, identifier, order = [cell.value for cell in row]
+        waypoint = get_waypoint(identifier=identifier, all_waypoint=all_waypoints)
+        if waypoint:
+            route = get_route(flight_plan_index=flight_plan_index, all_routes=routes)
+            if route:
+                route_point = RoutePoint(waypoint=waypoint, order=order)
+                route.route_points.append(route_point)
+            else:
+                print(f"Route {flight_plan_index} doesn't exist!")
+                quit()
+        else:
+            print(f"Waypoint {identifier} doesn't exist!")
+            quit()
 
-    flight_plan = root.createElement('flight-plan')
-    flight_plan.setAttribute('xmlns', 'http://www8.garmin.com/xmlschemas/FlightPlan/v1')
-    root.appendChild(flight_plan)
+    # Sort route points by order for each route
+    for route in routes:
+        route.route_points.sort(key=get_route_point_order)
 
-    # >created
-    created = root.createElement('created')
-    created.appendChild(root.createTextNode(fpl.created))
-    flight_plan.appendChild(created)
+    return routes
 
-    # >waypoint-table
-    waypoint_table = root.createElement('waypoint-table')
-    flight_plan.appendChild(waypoint_table)
 
-    for route_point in fpl.route_points:
-        # >>waypoint
-        waypoint_obj = route_point.waypoint
-        waypoint = root.createElement('waypoint')
-        waypoint_table.appendChild(waypoint)
+# Create Garmin flight plan XML from route objects
+def create_flight_plan_xml(routes, output_dir):
+    for fpl in routes:
+        root = minidom.Document()
 
-        # >>>identifier
-        identifier = root.createElement('identifier')
-        identifier.appendChild(root.createTextNode(waypoint_obj.identifier))
-        waypoint.appendChild(identifier)
+        flight_plan = root.createElement('flight-plan')
+        flight_plan.setAttribute('xmlns', 'http://www8.garmin.com/xmlschemas/FlightPlan/v1')
+        root.appendChild(flight_plan)
 
-        # >>>type
-        type = root.createElement('type')
-        type.appendChild(root.createTextNode(waypoint_obj.type))
-        waypoint.appendChild(type)
+        # Created date (assuming fpl has a 'created' field)
+        created = root.createElement('created')
+        created.appendChild(root.createTextNode(fpl.created))
+        flight_plan.appendChild(created)
 
-        # >>>country-code
-        country_code = root.createElement('country-code')
-        country_code.appendChild(root.createTextNode(waypoint_obj.country_code))
-        waypoint.appendChild(country_code)
+        # Waypoint table
+        waypoint_table = root.createElement('waypoint-table')
+        flight_plan.appendChild(waypoint_table)
 
-        # >>>lat
-        lat = root.createElement('lat')
-        lat.appendChild(root.createTextNode(str(waypoint_obj.lat)))
-        waypoint.appendChild(lat)
+        for route_point in fpl.route_points:
+            waypoint_obj = route_point.waypoint
+            waypoint = root.createElement('waypoint')
+            waypoint_table.appendChild(waypoint)
 
-        # >>>lon
-        lon = root.createElement('lon')
-        lon.appendChild(root.createTextNode(str(waypoint_obj.lon)))
-        waypoint.appendChild(lon)
+            for tag, value in [('identifier', waypoint_obj.identifier), 
+                               ('type', waypoint_obj.type),
+                               ('country-code', waypoint_obj.country_code), 
+                               ('lat', str(waypoint_obj.lat)), 
+                               ('lon', str(waypoint_obj.lon)), 
+                               ('comment', waypoint_obj.comment)]:
+                elem = root.createElement(tag)
+                elem.appendChild(root.createTextNode(value))
+                waypoint.appendChild(elem)
 
-        # >>>comment
-        comment = root.createElement('comment')
-        comment.appendChild(root.createTextNode(waypoint_obj.comment))
-        waypoint.appendChild(comment)
+            if waypoint_obj.elevation:
+                elevation = root.createElement('elevation')
+                elevation.appendChild(root.createTextNode(waypoint_obj.elevation))
+                waypoint.appendChild(elevation)
 
-        if waypoint_obj.elevation != "":
-            # elevation
-            elevation = root.createElement('elevation')
-            elevation.appendChild(root.createTextNode(waypoint_obj.elevation))
-            waypoint.appendChild(elevation)
+        # Route
+        route_elem = root.createElement('route')
+        flight_plan.appendChild(route_elem)
 
-    # route
-    route = root.createElement('route')
-    flight_plan.appendChild(route)
+        for tag, value in [('route-name', fpl.route_name),
+                           ('route-description', fpl.route_description),
+                           ('flight-plan-index', str(fpl.flight_plan_index))]:
+            elem = root.createElement(tag)
+            elem.appendChild(root.createTextNode(value))
+            route_elem.appendChild(elem)
 
-    # >route-name
-    route_name = root.createElement('route-name')
-    route_name.appendChild(root.createTextNode(fpl.route_name))
-    route.appendChild(route_name)
+        # Route points
+        for route_point in fpl.route_points:
+            route_point_elem = root.createElement('route-point')
+            route_elem.appendChild(route_point_elem)
 
-    # >route-description
-    route_description = root.createElement('route-description')
-    route_description.appendChild(root.createTextNode(fpl.route_description))
-    route.appendChild(route_description)
+            for tag, value in [('waypoint-identifier', route_point.waypoint.identifier), 
+                               ('waypoint-type', route_point.waypoint.type), 
+                               ('waypoint-country-code', route_point.waypoint.country_code)]:
+                elem = root.createElement(tag)
+                elem.appendChild(root.createTextNode(value))
+                route_point_elem.appendChild(elem)
 
-    # flight-plan-index
-    flight_plan_index = root.createElement('flight-plan-index')
-    flight_plan_index.appendChild(root.createTextNode(str(fpl.flight_plan_index)))
-    route.appendChild(flight_plan_index)
+        # Save XML to file
+        save_path = f"{output_dir}/{fpl.flight_plan_index}-{fpl.route_name}.fpl"
+        with open(save_path, "w") as f:
+            f.write(root.toprettyxml(indent="\t"))
 
-    for route_point in fpl.route_points:
-        waypoint_obj = route_point.waypoint
-        # >route-point
-        route_point = root.createElement('route-point')
-        route.appendChild(route_point)
+    print("Flight plan generation complete!")
 
-        # >>waypoint-identifier
-        waypoint_identifier = root.createElement('waypoint-identifier')
-        waypoint_identifier.appendChild(root.createTextNode(waypoint_obj.identifier))
-        route_point.appendChild(waypoint_identifier)
 
-        # >>waypoint-type
-        waypoint_type = root.createElement('waypoint-type')
-        waypoint_type.appendChild(root.createTextNode(waypoint_obj.type))
-        route_point.appendChild(waypoint_type)
-
-        # >>waypoint-country-code
-        waypoint_country_code = root.createElement('waypoint-country-code')
-        waypoint_country_code.appendChild(root.createTextNode(waypoint_obj.country_code))
-        route_point.appendChild(waypoint_country_code)
-
-    xml_str = root.toprettyxml(indent="\t")
-
-    save_path_file = f"output/{fpl.flight_plan_index}-{fpl.route_name}.fpl"
-
-    with open(save_path_file, "w") as f:
-        f.write(xml_str)
-
-print("Finish Creating Garmin Flight Plans!")
+# Main function to load data and generate XMLs
+if __name__ == "__main__":
+    all_waypoints = load_waypoints('static/waypoints.xlsx')
+    all_routes = load_routes('input/flight_plans.xlsx')
+    create_flight_plan_xml(all_routes, 'output')
