@@ -1,66 +1,72 @@
 from typing import List
 from xml.dom import minidom
 import xlsxwriter
-
-# parse an xml file by name
 from objects import Waypoint
 
+# Constants for KML tag names
+KML_NAME_TAG = 'name'
+KML_COORDINATES_TAG = 'coordinates'
+
+# Load and parse the KML file
 mydoc = minidom.parse('input/example.kml')
 
-names = mydoc.getElementsByTagName('name')
+# Extract waypoint names
+names = mydoc.getElementsByTagName(KML_NAME_TAG)
 
-all_names = []
-all_identifiers = []
-# all names
-for name in names:
-    full_name = str(name.firstChild.data)
-    if full_name in ('GPS device', 'vice', 'Waypoints', 'ints'):
-        continue
-    all_names.append(full_name)
-
-    clean_name = ''.join(e for e in full_name if e.isalnum())
-    identifier = clean_name[:5]
-    all_identifiers.append(identifier)
-
-coordinates = mydoc.getElementsByTagName('coordinates')
-
-all_lons = []
-all_lats = []
-for point in coordinates:
-    data = str(point.firstChild.data)
-    arr = data.split(',')
-    lon = arr.pop()
-    all_lons.append(lon)
-    lat = arr.pop()
-    all_lats.append(lat)
+# Extract coordinates
+coordinates = mydoc.getElementsByTagName(KML_COORDINATES_TAG)
 
 all_waypoints: List[Waypoint] = []
-for i in range(len(all_names)):
-    waypoint = Waypoint(name=all_names[i], identifier=all_identifiers[i], lat=float(all_lats[i]),
-                        lon=float(all_lons[i]))
+
+# Combined parsing for names and coordinates
+for i in range(len(names)):
+    full_name = str(names[i].firstChild.data).strip()
+
+    # Skip unnecessary names
+    if full_name in ('GPS device', 'vice', 'Waypoints', 'ints'):
+        continue
+
+    # Clean up the name to generate an identifier
+    clean_name = ''.join(e for e in full_name if e.isalnum())
+    identifier = clean_name[:5]
+
+    # Extract and parse coordinates (lon, lat)
+    try:
+        coords = coordinates[i].firstChild.data.strip().split(',')
+        lon = float(coords[0])
+        lat = float(coords[1])
+    except (ValueError, IndexError) as e:
+        print(f"Error parsing coordinates for {full_name}: {e}")
+        continue
+
+    # Create Waypoint object and skip if longitude is zero
+    waypoint = Waypoint(name=full_name, identifier=identifier, lat=lat, lon=lon)
     if waypoint.lon == 0:
         continue
+
     all_waypoints.append(waypoint)
 
-# Create a workbook and add a worksheet.
+# Create an XLSX file and add the waypoints to it
 workbook = xlsxwriter.Workbook('output/Garmin_Waypoints.xlsx')
 worksheet = workbook.add_worksheet("waypoint-table")
 
+# Write column headers
 labels = ["name", "identifier", "type", "country-code", "lat", "lon", "comment", "elevation"]
+for i, label in enumerate(labels):
+    worksheet.write(0, i, label)
 
-for i in range(len(labels)):
-    worksheet.write(0, i, labels[i])
+# Write waypoint data
+for row_index, waypoint in enumerate(all_waypoints, start=1):
+    worksheet.write(row_index, 0, waypoint.name)
+    worksheet.write(row_index, 1, waypoint.identifier)
+    worksheet.write(row_index, 2, waypoint.type.value)
+    worksheet.write(row_index, 3, waypoint.country_code)
+    worksheet.write(row_index, 4, waypoint.lat)
+    worksheet.write(row_index, 5, waypoint.lon)
+    worksheet.write(row_index, 6, waypoint.comment)
+    worksheet.write(row_index, 7, waypoint.elevation)
 
-for j in range(len(all_waypoints)):
-    worksheet.write(j + 1, 0, all_waypoints[j].name)
-    worksheet.write(j + 1, 1, all_waypoints[j].identifier)
-    worksheet.write(j + 1, 2, all_waypoints[j].type.value)
-    worksheet.write(j + 1, 3, all_waypoints[j].country_code)
-    worksheet.write(j + 1, 4, all_waypoints[j].lat)
-    worksheet.write(j + 1, 5, all_waypoints[j].lon)
-    worksheet.write(j + 1, 6, all_waypoints[j].comment)
-    worksheet.write(j + 1, 7, all_waypoints[j].elevation)
-
+# Close the workbook
 workbook.close()
 
 print("Converted KML to XLSX successfully!")
